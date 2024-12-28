@@ -1,7 +1,34 @@
+import { getCustomerSearchResult } from "@/lib/queries/getCustomerSearchResults";
+import CustomerSearch from "./CustomerSearch";
+import * as Sentry from "@sentry/nextjs";
+import CustomerTable from "./CustomerTable";
 export const metadata = {
-  title: "Customers",
+  title: "Customer Search",
 };
-const Customers = () => {
-  return <div>Customers page</div>;
+const Customers = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const { searchText } = await searchParams;
+
+  if (!searchText) return <CustomerSearch />;
+
+  const span = Sentry.startInactiveSpan({
+    name: "getCustomerSearchResult-2",
+  });
+
+  const results = await getCustomerSearchResult(searchText);
+  span.end();
+  return (
+    <>
+      <CustomerSearch />
+      {results.length ? (
+        <CustomerTable data={results} />
+      ) : (
+        <p className="mt-4">No results found</p>
+      )}
+    </>
+  );
 };
 export default Customers;
